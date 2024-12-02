@@ -4,6 +4,7 @@
 > 3. RequestMapping, ResponseBody
 > 4. Test를 활용한 CRUD
 
+---
 ### 스프링부트란?
 - 자바의 웹 프레임워크로 기존 스프링 프레임워크에 톰캣 서버를 내장하고 여러 편의 기능들을 추가하여 꾸준한 인기를 누리고 있는 프레임 워크이다.
 - 웹 프로그램을 쉽고 빠르게 만들어 주는 웹 프레임워크다.
@@ -75,7 +76,142 @@
     }
 ```
   <img src="../md/images/image2.png" width="700px">
+
 ---
 
 ### Test를 활용한 CRUD
+- DB테이블에 대응하는 클래스 생성
+  ```java
+  @Getter
+  @Setter
+  @Entity
+  public class Question {
+      @Id
+      @GeneratedValue(strategy = GenerationType.IDENTITY)
+      private Integer id;
+  
+      @Column(length = 200)
+      private String subject;
+  
+      @Column(columnDefinition = "TEXT")
+      private String content;
+  
+      private LocalDateTime createDate;
+  }
+  
+  ```
+  - 엔티티로 만들기 위해 @Entity 어노테이션 적용을 해야 JPA가 엔티티로 인식
+  - @ID는 고유 속성을 기본 키로 지정하는 것이다.(primary eky)
+  - @GeneratedValue는 속성의 값을 따로 세팅하지 않아도 1씩 자동으로 증가하여 저장
+  - strategy는 고유번호를 생성하는 옵션으로 GenerationType.IDENTITY는 해당 컬럼만의 독립적인 시퀀스를 생성하여 번호를 증가시킬 때 사용
+  - @Column은 세부 설정을 위해 사용 (length = 컬럼의 길이를 설정할때 사용, columnDefinition = "TEXT" 글자수를 제한 할수 없는 경우)
+
+- Spring Boot에서 기본적으로 제공하는 `test` 파일에서 작업
+- 데이터 처리를 위해서는 실제 데이터베이스와 연동하는 JPA 리포지터리가 필요하다.
+  ```java
+  public interface QuestionRepository extends JpaRepository<Question, Integer> {
+  
+      // 질문
+      Question findBySubject(String subject);
+      Question findBySubjectAndContent(String subject, String content);
+      List<Question> findBySubjectContaining(String subject);
+  
+  }
+  ```
+- JpaRepository를 상속할 때는 제네릭 타입으로 <Question, Integer> 처럼 리포지터리의 대상이 되는 엔티티의 타입(Question)과 해당 엔티티의 PK의 속성 타입(Integer)을 지정해야 한다.
+  - Question 엔티티의 PK(Primary Key) 속성인 id의 타입은 Integer 이다.
+```java
+@SpringBootTest
+class SbbApplicationTests {
+
+  @Autowired
+  private QuestionRepository qRepo;
+
+  @Test
+  void testJpa() {
+    Question q1 = new Question();
+    q1.setSubject("sbb가 무엇인가요?");
+    q1.setContent("sbb에 대해서 알고 싶습니다.");
+    q1.setCreateDate(LocalDateTime.now());
+    this.qRepo.save(q1); // 첫번째 질문 저장
+
+    Question q2 = new Question();
+    q2.setSubject("스프링부트 모델 질문입니다.");
+    q2.setContent("id는 자동으로 생성되나요?");
+    q2.setCreateDate(LocalDateTime.now());
+    this.qRepo.save(q2);  // 두번째 질문 저장       
+  }
+}
+```
+  - @Autowired 어노테이션은 스프링의 DI 기능으로 questionRepository 객체를 스프링이 자동으로 생성해 준다.
+  - 데이터 저장
+    - q1,q2라는 Question 엔티티 객체를 생성하고 QuestionRepository를 이용하여 값을 데이텁제이스에 저장하는 코드
+    <img src="../md/images/image3.png" width="700px">
+    - id는 Question 엔티티 기본키로 데이터를 생성할때 자동으로 1씩 증가 하는 것을 확인 가능
+  - 데이터 조회
+    ```java
+    @Test
+    void testFind() {
+        List<Question> qList = this.qRepo.findAll();
+        for (Question question : qList) {
+            System.out.println(question.getSubject());
+        }
+        
+        //하나만 찾아올때(id로 질문 찾기 : 이때 메소드는 Optional<제네릭>으로 리턴됨(못찾을 경우도 포함))
+        Optional<Question> q1 = qRepo.findById(1);
+        if(q1.isPresent()) {    //q1객체가 있을경우
+            Question q = q1.get();  //get() 메소드로 가져옴
+            System.out.println(q.getSubject());
+        }
+    }
+
+    @Test
+    void testFindBy() { // 해당 질문의 제목에 대한 답변 찾는법
+        Question q = this.qRepo.findBySubject("sbb가 무엇인가요?");
+        System.out.println(q.getContent());
+    }
+
+    @Test
+    void testFindByContaining() {
+        List<Question> qList = this.qRepo.findBySubjectContaining("sbb");
+        for (Question q : qList) {
+            System.out.println(q.getSubject());
+        }
+    }
+    ```
+    - findAll은 모든 데이터를 조회할때 사용되는 메서드
+      - 총2건의 데이터가 있으므로 List<Question> 으로 Question 안의 데이터만 출력
+    - findById(id값)은 매개변수에 해당 id값을 입력함으로써 id값으로 데이터 조회가 가능하다
+      - 하지만 리턴 타입은 Optional로 사용
+      - null 처리를 유연하게 처리하기 위해 사용하는 클래스로 isPresent로 null이 아닌지를 확인가능
+    - findBySubject는 subject값으로 데이터를 조회가능 하다
+      - Question 리포지토리는 기본적인 메서드는 제공이 되나, findBySubject는 제공 안되므로 인터페이스에 추가를 해야한다.
+      - 그럼 해당 제목을 매겨변수에 입력하므로 제목으로 테이블 데이터를 조회할수 있다.
+    - testFindByContaining은 Like와 동일 
+      - 제목에 특정 문자열이 포함되어 있는 데이터를 조회가능
+  
+  - 데이터 수정
+  ```java
+@Test
+    void testUpdate() {
+        Optional<Question> oq = qRepo.findById(1);
+        Question q = oq.get();
+        q.setSubject("수정된 제목");
+        this.qRepo.save(q); //입력과 수정은 같은 save 메소드 사용, 이때 id가 있으면 수정
+    }
+```
+  - 해당 id값의의 이름을 찾아 제목을 변경
+  - update도 저장과 동일하게 save() 메서드를 사용
+  <img src="../md/images/image4.png" width="700px">
+
+- 데이터 삭제
+ ```java
+  @Test
+void testDelete() {
+  this.qRepo.deleteById(1);
+}
+ ```
+  - 해당 아이디 값을 매겨변수에 작성하여 삭제
+
+   
 
