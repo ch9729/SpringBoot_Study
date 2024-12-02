@@ -2,6 +2,7 @@
 > 1. 스프링부트란?
 > 2. 프로젝트 생성
 > 3. RequestMapping, ResponseBody
+> 4. Test를 활용한 CRUD
 
 ### 스프링부트란?
 - 자바의 웹 프레임워크로 기존 스프링 프레임워크에 톰캣 서버를 내장하고 여러 편의 기능들을 추가하여 꾸준한 인기를 누리고 있는 프레임 워크이다.
@@ -57,7 +58,7 @@
         spring.datasource.url=jdbc:h2:C:/java/local   //jdbc:h2: 뒤에 local.mv.db 파일 있는 경로 작성
         spring.datasource.driverClassName=org.h2.Driver
         spring.datasource.username=sa
-        spring.datasource.password=
+        spring.datasource.password= //학습중이라 비밀번호 설정X
         ```
 ---
 
@@ -73,4 +74,8 @@
         return "Hello World";
     }
 ```
+  <img src="../md/images/image2.png" width="700px">
+---
+
+### Test를 활용한 CRUD
 

@@ -32,6 +32,16 @@ class SbbApplicationTests {
     }
 
     @Test
+    void testInput() {
+        Question q1 = new Question();
+
+        q1.setSubject("새로운 sbb");
+        q1.setContent("새로운 아이템 내용입니다.");
+        q1.setCreateDate(LocalDateTime.now());
+        this.qRepo.save(q1);    //id가 없으므로 입력
+    }
+
+    @Test
     void testFind() {
         List<Question> qList = this.qRepo.findAll();
         for (Question question : qList) {
@@ -46,4 +56,30 @@ class SbbApplicationTests {
         }
     }
 
+    @Test
+    void testFindBy() { // 해당 질문의 제목에 대한 답변 찾는법
+        Question q = this.qRepo.findBySubject("sbb가 무엇인가요?");
+        System.out.println(q.getContent());
+    }
+
+    @Test
+    void testFindByContaining() {
+        List<Question> qList = this.qRepo.findBySubjectContaining("sbb");
+        for (Question q : qList) {
+            System.out.println(q.getSubject());
+        }
+    }
+
+    @Test
+    void testUpdate() {
+        Optional<Question> oq = qRepo.findById(1);
+        Question q = oq.get();
+        q.setSubject("수정된 제목");
+        this.qRepo.save(q); //입력과 수정은 같은 save 메소드 사용, 이때 id가 있으면 수정
+    }
+
+    @Test
+    void testDelete() {
+        this.qRepo.deleteById(3);
+    }
 }
