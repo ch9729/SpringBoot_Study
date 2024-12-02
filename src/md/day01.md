@@ -147,6 +147,7 @@ class SbbApplicationTests {
   - 데이터 저장
     - q1,q2라는 Question 엔티티 객체를 생성하고 QuestionRepository를 이용하여 값을 데이텁제이스에 저장하는 코드
     <img src="../md/images/image3.png" width="700px">
+    
     - id는 Question 엔티티 기본키로 데이터를 생성할때 자동으로 1씩 증가 하는 것을 확인 가능
   - 데이터 조회
     ```java
