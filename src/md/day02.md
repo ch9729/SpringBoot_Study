@@ -205,3 +205,31 @@ public class QuestionController {
     
     - "@{}"안에 변수를 넣으려면 변수 앞뒤에 __${변수}__를 작성한다.
     - Controller
+    ```java
+    @RequestMapping("/detail/{id}")
+    public String detail(@PathVariable int id, Model model) {
+        Question q = qService.getQuestion(id);
+        model.addAttribute("q", q);
+        return "question_detail";
+    }
+    ```
+  
+    - 해당 화면에 실제 제목과 내용을 출력 하기 위해 Service 추가
+    ```java
+    public Question getQuestion(Integer id) {  
+            Optional<Question> question = this.qRepo.findById(id);
+            if (question.isPresent()) {
+                return question.get();
+            } else {
+                throw new DataNotFoundException("question not found");
+            }
+        }
+    ```
+  
+    - 템플릿 화면
+    ```java
+    <h1 th:text="${question.subject}"></h1>
+    <div th:text="${question.content}"></div>
+    ```
+  <img src="../md/images/image10.png" width="700px">
+    
