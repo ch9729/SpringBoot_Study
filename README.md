@@ -8,4 +8,14 @@
 > 1. Answer 데이터 생성, 저장, 검색
 > 2. 질문 목록과 템플릿
 > 3. 서비스
-> 4. 질문상센
+> 4. 질문상세
+
+## [3일차](https://github.com/ch9729/SpringBoot_Study/blob/main/src/md/day03.md)
+> 1. 답변등록
+> 2. 페이징
+> 3. 게시물 일련번호 추가
+
+## [4일차](https://github.com/ch9729/SpringBoot_Study/blob/main/src/md/day04.md)
+> 1. 스프링 시큐리티
+> 2. 회원가입1
+> 3. 회원가입2
