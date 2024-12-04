@@ -17,5 +17,4 @@
 
 ## [4일차](https://github.com/ch9729/SpringBoot_Study/blob/main/src/md/day04.md)
 > 1. 스프링 시큐리티
-> 2. 회원가입1
-> 3. 회원가입2
+> 2. 회원가입
