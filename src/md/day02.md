@@ -232,4 +232,3 @@ public class QuestionController {
     <div th:text="${question.content}"></div>
     ```
   <img src="../md/images/image10.png" width="700px">
-    
