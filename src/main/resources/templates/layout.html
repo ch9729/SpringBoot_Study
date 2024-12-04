@@ -5,8 +5,31 @@
     <meta charset="UTF-8">
     <title>QnA</title>
     <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <!-- 부트스트랩 JS-->
+    <script th:src="@{/js/bootstrap.bundle.min.js}"></script>
 </head>
 <body>
+<!-- th:fragment="이름" 으로 공통 태그부분 작성 -->
+<nav th:fragment="nav" class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+    <div class="container-fluid">
+        <a class="navbar-brand" th:href="@{/}">📖SBB</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="#">로그인</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
 
+<!-- th:fragment="이름" 으로 공통 태그부분 작성 -->
+<div th:fragment="formErrors" class="alert alert-danger" role="alert" th:if="${#fields.hasAnyErrors()}">
+    <div th:each="err : ${#fields.allErrors()}" th:text="${err}" />
+</div>
 </body>
 </html>

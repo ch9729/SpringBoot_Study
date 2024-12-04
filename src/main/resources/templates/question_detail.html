@@ -3,6 +3,7 @@
 <html lang="en">
 <head th:replace="layout::head"></head>
 <body>
+<nav th:replace="layout::nav"></nav>
 <div class="container my-3">
     <!-- 질문 -->
     <h2 class="border-bottom py-2" th:text="${q.subject}"></h2>
@@ -32,8 +33,9 @@
     </div>
     <!-- 답변 반복 끝  -->
     <!-- 답변 작성 -->
-    <form th:action="@{/answer/create/__${q.id}__}" method="post" class="my-3">
-        <textarea name="content" id="content" rows="10" class="form-control"></textarea>
+    <form th:action="@{/answer/create/__${q.id}__}" th:object="${answerForm}" method="post" class="my-3">
+        <div th:replace="layout::formErrors"></div>
+        <textarea th:field="*{content}" rows="10" class="form-control"></textarea>
         <input type="submit" value="답변등록" class="btn btn-primary my-2">
     </form>
 </div>
