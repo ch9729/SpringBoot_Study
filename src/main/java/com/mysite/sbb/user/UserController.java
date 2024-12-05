@@ -22,7 +22,8 @@ public class UserController {
     }
 
     @PostMapping("/signup")
-    public String signup(@Valid UserCreateForm userCreateForm, BindingResult bindingResult) {
+    public String signup(@Valid UserCreateForm userCreateForm,
+                         BindingResult bindingResult) {
         if(bindingResult.hasErrors()) { //실패 했을경우 현재 페이지 유지
             return "signup_form";
         }
@@ -43,4 +44,10 @@ public class UserController {
         }
         return "redirect:/";
     }
+
+    @GetMapping("/login")
+    public String login() {
+        return "login_form";
+    }
+
 }

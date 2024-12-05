@@ -16,7 +16,7 @@ public class InputTest {
         for (int i = 0; i <= 300; i ++) {
             String s = String.format("테스트 데이터입니다: [%03d]", i);
             String c = "내용";
-        qService.createQuestion(s,c);
+        qService.createQuestion(s,c, null);
         }
 
     }

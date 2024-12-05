@@ -1,5 +1,6 @@
 package com.mysite.sbb.question;
 
+import com.mysite.sbb.user.SiteUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,14 +34,27 @@ public class QuestionService {
         }
     }
 
-    // 새 질문을 저장
-    public void createQuestion(String subject, String content) {
+    // 새 질문을 저장(글쓴이 추가)
+    public void createQuestion(String subject, String content, SiteUser siteUser) {
         Question q = new Question();
         q.setSubject(subject);
         q.setContent(content);
         q.setCreateDate(LocalDateTime.now());
+        q.setAuthor(siteUser);
         qRepo.save(q);
     }
+    
+    //수정하기
+    public void modify(Question question, String subject, String content) {
+        question.setSubject(subject);
+        question.setContent(content);
+        question.setModifyDate(LocalDateTime.now());    //수정시간 업데이트
+        qRepo.save(question);
+    }
 
+    //삭제하기
+    public void deleteQuestion(Question question) {
+        qRepo.delete(question);
+    }
 
 }

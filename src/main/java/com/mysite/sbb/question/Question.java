@@ -1,6 +1,7 @@
 package com.mysite.sbb.question;
 
 import com.mysite.sbb.answer.Answer;
+import com.mysite.sbb.user.SiteUser;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,9 +26,19 @@ public class Question {
     @Column(columnDefinition = "TEXT")  // "내용"처럼 글자 수를 제한할 수 없는 경우에 사용
     private String content;
 
+    //등록시간
     private LocalDateTime createDate;
+
+    //수정시간
+    private LocalDateTime modifyDate;
+
+    //table해당 표시가 안됨
+    //외래키 설정
+    @ManyToOne
+    private SiteUser author;
 
     // 반대로 이 질문에 해당 답변들
     @OneToMany(mappedBy = "question", cascade = CascadeType.REMOVE)
     private List<Answer> answerList;
+
 }
