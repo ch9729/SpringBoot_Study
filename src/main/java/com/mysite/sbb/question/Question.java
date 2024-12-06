@@ -9,6 +9,7 @@ import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Entity // JPA의 테이블과 같은 클래스
 @Getter
@@ -41,4 +42,7 @@ public class Question {
     @OneToMany(mappedBy = "question", cascade = CascadeType.REMOVE)
     private List<Answer> answerList;
 
+    //질문과 추천인과의 관계가 다 대 다 관계 성립 (ManyToMany)
+    @ManyToMany
+    Set<SiteUser> voter;
 }

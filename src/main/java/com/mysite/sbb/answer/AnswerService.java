@@ -46,4 +46,10 @@ public class AnswerService {
     public void deleteAnswer(Answer answer) {
         aRepo.delete(answer);
     }
+
+    //추천하기
+    public void vote(Answer answer, SiteUser user) {
+        answer.getVoter().add(user);
+        aRepo.save(answer);
+    }
 }

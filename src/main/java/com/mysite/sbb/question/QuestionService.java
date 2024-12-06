@@ -57,4 +57,9 @@ public class QuestionService {
         qRepo.delete(question);
     }
 
+    //추천하기
+    public void vote(Question question, SiteUser siteUser) {
+        question.getVoter().add(siteUser);
+        qRepo.save(question);
+    }
 }
