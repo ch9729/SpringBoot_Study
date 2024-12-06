@@ -2,6 +2,8 @@
 > 1. 로그인
 > 2. 로그아웃
 > 3. 엔티티 변경 글쓴이 추가
+> 4. 로그인 유저만 질문/ 답변 가능
+> 5. 글쓴이 표시
 
 ---
 ### 로그인
@@ -166,3 +168,178 @@
 - 테이블 확인
   <img src="../md/images/image29.png" width="700px">
 
+  - `site_user` 테이블의 id 값이 저장되어 SiteUser엔티티와 연결
+- 답변 작성자 저장하기
+  ```java
+   @PostMapping("/create/{id}")
+      public String createAnswer(Model model, @PathVariable("id") Integer id, 
+              @Valid AnswerForm answerForm, BindingResult bindingResult, Principal principal) {
+          (... 생략 ...)
+      }
+  ```
+  - 로그인 정보를 알기 위해 시큐리티가 제공하는 `Principal`객체사용
+  - `principal.getName()` 호출로 현재 로그인한 사용자의 ID를 알수있다.
+- UserService 추가
+  ```java
+  public SiteUser getUser(String username) {
+          Optional<SiteUser> siteUser = this.userRepo.findByUsername(username);
+          if (siteUser.isPresent()) {
+              return siteUser.get();
+          } else {
+              throw new DataNotFoundException("siteuser not found");
+          }
+      }
+  ```
+- AnswerService 수정
+  ```java
+      public void create(Question question, String content, SiteUser author) {
+          Answer answer = new Answer();
+          answer.setContent(content);
+          answer.setCreateDate(LocalDateTime.now());
+          answer.setQuestion(question);
+          answer.setAuthor(author);
+          this.aRepo.save(answer);
+      }
+  ```
+  - Service 구현으로 Controller작성시 답변을 작성시 작성자도 함께 저장된다.
+  ```java
+  @Autowired
+      private UserService uService;
+      
+      @PostMapping("/create/{id}")
+      public String createAnswer(Model model, @PathVariable("id") Integer id,
+                              @Valid AnswerForm answerForm, BindingResult result, Principal principal) {
+          Question question = this.qService.getQuestion(id);
+          SiteUser siteUser = this.uService.getUser(principal.getName()); //추가
+          if(result.hasErrors()) {
+              model.addAttribute("question", question);
+              return "question_detail";
+          }
+          this.aService.create(question, answerForm.getContent(), siteUser); //수정
+          return String.format("redirect:/question/detail/%s", id);
+      }
+  ```
+  - 답변 저장메서드를 구현하였으므로, 질문에 대한 service 및 controller로 참고해서 만들어보자
+---
+### 로그인 유저만 질문/답변 가능
+- 로그아웃 상태에서 질문, 답변 등록하면 500에러 발생
+<img src="../md/images/image30.png" width="700px">
+
+  - `principal` 객체가 `null`값이라서 발생
+  - `principal` 객체는 로그인을 해야만 생성되는 객체이다.
+  - 객체를 사용하기 위해선 `@PreAuthorize("isAuthenticated()")`을 사용해야한다.
+  - 로그인이 필요한 메서드를 의미
+  - 로그아웃 상태에서 호출되면 로그인 페이지로 이동된다.
+- Controller 수정
+  ```java
+  @PreAuthorize("isAuthenticated()")
+      @GetMapping("/create")
+      public String questionCreate(QuestionForm questionForm) {
+          return "question_form";
+      }
+  
+      @PreAuthorize("isAuthenticated()")
+    @PostMapping("/create")
+    public String qCreate(@Valid QuestionForm questionForm,
+                          BindingResult bindingResult,
+                          Principal principal) {
+        SiteUser siteUser = userService.getUser(principal.getName());
+
+        //@Valid로 해당 객체를 검사한다. 결과는 두번째 나오는 바인딩리절트에 저장됨
+        if(bindingResult.hasErrors()) {
+            return "question_form"; //되돌아감
+        }
+        qService.createQuestion(questionForm.getSubject(), questionForm.getContent(), siteUser);
+        return "redirect:/question/list";
+    }
+  ```
+  ```java
+      //답변글쓰기 인증되지 않은 상태이면 요청이 안되게 접근이 불가
+      @PreAuthorize("isAuthenticated()")
+      @PostMapping("/create/{id}")
+      public String create(@PathVariable int id,
+                           @Valid AnswerForm answerForm,
+                           BindingResult bindingResult,
+                           Model model,
+                           Principal principal) {     //인증이 되면 User 정보가 Principal(username) 내 저장 되어 있다.
+          // 질문을 가져온다.
+          Question q = qService.getQuestion(id);
+          // 답변을 저장하는 서비스
+          SiteUser siteUser = uService.getUser(principal.getName());
+          if(bindingResult.hasErrors()) {
+              model.addAttribute("q", q);
+              return "question_detail";
+          }
+          aService.create(q, answerForm.getContent(), siteUser);
+          // 답변을 저장한 후 다시 상세화면으로 전환
+          return "redirect:/question/detail/" + id;
+      }
+  
+      @PreAuthorize("isAuthenticated()")
+      @GetMapping("/modify/{id}")
+      public String modifyAnswer(@PathVariable int id,
+                                 Principal principal,
+                                 AnswerForm answerForm) {
+          Answer a = aService.getAnswer(id);
+          if(!a.getAuthor().getUsername().equals(principal.getName())) {
+              throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "수정권한이 없습니다.");
+          }
+          answerForm.setContent(a.getContent());
+          return "answer_form";
+      }
+  ```
+- `@PreAuthorize` 어노테이션 동작을 위해 `SecurityConfig`수정
+  ```java
+  @EnableGlobalMethodSecurity(prePostEnabled = true)
+  ```
+  - 해당 설정은 질문, 답변 Controller에서 로그인 여부를 판별하기 위해 사용했던 `@PreAuthorize`를 사용하기 위해 반드시 필요
+
+- disabled
+  - 로그아웃 상태에서 글을 작성할수 없도록 작성란을 막는것이 효과적
+  - detail.html 수정
+  ```java
+  <textarea sec:authorize="isAnonymous()" disabled th:field="*{content}" class="form-control" rows="10"></textarea>
+          <textarea sec:authorize="isAuthenticated()" th:field="*{content}" class="form-control" rows="10"></textarea>
+  ```
+  - 로그아웃 상태일때 `disabled`속성을 적용해 입력이 안되도록 만들었다.
+  - sec:authorize="isAnonymous()" - 현재 로그아웃 상태
+  - sec:authorize="isAuthenticated()" - 현재 로그인 상태
+    <img src="../md/images/image31.png" width="700px">
+
+---
+### 글쓴이 표시
+- 해당 상세 화면에 글쓴이 표시
+- 리스트 페이지 수정
+  ```java
+  <tr class="text-center">
+      <th>번호</th>
+      <th style="width:50%">제목</th>
+      <th>글쓴이</th>
+      <th>작성일시</th>
+  </tr>
+  
+  <tr class="text-center" th:each="question, loop : ${paging}">
+      <td th:text="${paging.getTotalElements - (paging.number * paging.size) - loop.index}"></td>
+      <td class="text-start">
+          <a th:href="@{|/question/detail/${question.id}|}" th:text="${question.subject}"></a>
+          <span class="text-danger small ms-2" th:if="${#lists.size(question.answerList) > 0}"
+  th:text="${#lists.size(question.answerList)}">
+          </span>
+      </td>
+      <td><span th:if="${question.author != null}" th:text="${question.author.username}"></span></td>
+      <td th:text="${#temporals.format(question.createDate, 'yyyy-MM-dd HH:mm')}"></td>
+  </tr>
+  ```
+  - 더미데이터로 작성한 내용에는 글쓴이가 표시되지 않지만 새롭게 질문을 만들면 글쓴이가 표시
+    <img src="../md/images/image32.png" width="700px">
+
+- detail 페이지 수정
+  ```java
+   <div class="badge bg-light text-dark p-2 text-start">
+                  <div class="mb-2">
+                      <span th:if="${question.author != null}" th:text="${question.author.username}"></span>
+                  </div>
+                  <div th:text="${#temporals.format(question.createDate, 'yyyy-MM-dd HH:mm')}"></div>
+              </div>
+  ```
+  <img src="../md/images/image33.png" width="700px">
