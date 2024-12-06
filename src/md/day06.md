@@ -224,6 +224,7 @@
   - 오류가 없으면 상세화면으로 리다이렉트
     <img src="../md/images/image39.png" width="700px">
 
+---
 ### 답변 추천
 - 질문 추천을 참고로 Question객체 대신 Answer객체를 사용
 ---
